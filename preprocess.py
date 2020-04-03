@@ -9,7 +9,7 @@
 import re
 import collections
 
-def process_PFR_sentence(s, ignore_punc):
+def process_PFR_sentence(s, punc_mode):
   s = re.sub(
       r'([\uff10-\uff19]+\uff0f[\uff10-\uff19]+)|([\uff10-\uff19]+(\uff0e[\uff10-\uff19]+)?\uff05?)',
       r'N', s)  # replace fullwidth digits
@@ -23,8 +23,10 @@ def process_PFR_sentence(s, ignore_punc):
   processed = []
   punc_prog = re.compile(r'.+/w')
   for t in toks:
-    if punc_prog.match(t):  # replace with 'P' or ignore
-      if not ignore_punc:
+    if punc_prog.match(t):  # keep or ignore
+      if punc_mode == 0:  # just leave it there
+        processed.append([t[:-2], 'S', 'w'])
+      elif punc_mode == 1:  # replace with 'P'
         processed.append(['P', 'S', 'w'])  # as a single char word
       continue
     parts = t.split('/')
@@ -77,16 +79,28 @@ def extract_PFR_sentences(input_file):
 
   return result
 
-def process_PFR_corpus(input_file, output_file, split_line=False, ignore_punc=False):
+def process_PFR_corpus(input_file, output_file, split_line=False, punc_mode=1):
+  # punc_mode
+  # 0: just leave punctuations there without any processing
+  # 1: replace the punctuations with a special mark
+  # other: ignore punctuations
   sents = extract_PFR_sentences(input_file) if split_line else extract_PFR_lines(input_file)
 
-  processed = [process_PFR_sentence(s, ignore_punc) for s in sents]
+  processed = [process_PFR_sentence(s, punc_mode) for s in sents]
   with open(output_file, 'w') as f:
     for s in processed:
       for t in s:
         f.write('%s\t%s\t%s\n' % (t[0], t[1], t[2]))
       f.write('\n')
 
+def process_SIGHAN2005_corpus(input_file, output_file, ignore_punc=False):
+  processed = []
+  fullwidth_punc_prog = re.compile(r'[，、。！？：；（）《》]')
+  with open('input_file', 'r') as f:
+    for line in f:
+      toks = line.split()
+      for t in toks:
+        pass
 
 # def _build_vocab(input_file):
 #   word_cnt = collections.Counter()
@@ -95,5 +109,5 @@ def process_PFR_corpus(input_file, output_file, split_line=False, ignore_punc=Fa
 #     for line in f:
 #       word_cnt.update(line.split())
 
-process_PFR_corpus('testdata.txt', 'processed.txt')
+process_PFR_corpus('testdata.txt', 'processed.txt', punc_mode=1)
 
