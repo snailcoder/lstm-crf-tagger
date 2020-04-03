@@ -9,7 +9,7 @@
 import re
 import collections
 
-def process_PFR_sentence(s):
+def process_PFR_sentence(s, ignore_punc):
   s = re.sub(
       r'([\uff10-\uff19]+\uff0f[\uff10-\uff19]+)|([\uff10-\uff19]+(\uff0e[\uff10-\uff19]+)?\uff05?)',
       r'N', s)  # replace fullwidth digits
@@ -17,12 +17,15 @@ def process_PFR_sentence(s):
       r'[\uff21-\uff3a,\uff41-\uff5a]+',
       r'L', s)  # replace fullwidth latins
   s = re.sub(r'\[|\][a-z]+', '', s)  # remove square brackets for proper nouns
+
   toks = s.split()
-  special = {'N': '<NUM>', 'L': '<LAT>'}
+  special = {'N': '<NUM>', 'L': '<LAT>', 'P': '<PUN>'}
   processed = []
   punc_prog = re.compile(r'.+/w')
   for t in toks:
-    if punc_prog.match(t):
+    if punc_prog.match(t):  # replace with 'P' or ignore
+      if not ignore_punc:
+        processed.append(['P', 'S', 'w'])  # as a single char word
       continue
     parts = t.split('/')
     assert(len(parts) == 2)
@@ -41,11 +44,24 @@ def process_PFR_sentence(s):
 
   return processed
 
-def process_PFR_corpus(input_file, output_file):
+def extract_PFR_lines(input_file):
+  # Each line is treated as a single sentence.
+
+  result = []
+  with open(input_file, 'r') as f:
+    for line in f:
+      line = line[23:]  # skip the number sequence at the begining
+      result.append(line)
+
+  return result
+
+def extract_PFR_sentences(input_file):
+  # Split each line is broken into some sentenecs by break punctuations.
+
   break_punc_prog = re.compile(r'[，、。！？：；]/w')
   inner_prog = re.compile(r'（/w([^）]+)')
   right_parenthesis_prog = re.compile(r'）/w')
-  processed = []
+  result = []
 
   with open(input_file, 'r') as f:
     for line in f:
@@ -53,19 +69,24 @@ def process_PFR_corpus(input_file, output_file):
       sents = break_punc_prog.split(line)
       to_process = []
       for s in sents:
-          inner = inner_prog.findall(s)  # extract contents in parenthesis
-          s = inner_prog.sub('', s)  # remove left parenthesis and contents
-          s = right_parenthesis_prog.sub('', s)  # remove right parenthesis
-          to_process.append(s)
-          to_process.extend(inner)
-      for s in to_process:
-        processed.append(process_PFR_sentence(s))
+        inner = inner_prog.findall(s)  # extract contents in parenthesis
+        s = inner_prog.sub('', s)  # remove left parenthesis and contents
+        s = right_parenthesis_prog.sub('', s)  # remove right parenthesis
+        result.append(s)
+        result.extend(inner)
 
+  return result
+
+def process_PFR_corpus(input_file, output_file, split_line=False, ignore_punc=False):
+  sents = extract_PFR_sentences(input_file) if split_line else extract_PFR_lines(input_file)
+
+  processed = [process_PFR_sentence(s, ignore_punc) for s in sents]
   with open(output_file, 'w') as f:
     for s in processed:
       for t in s:
         f.write('%s\t%s\t%s\n' % (t[0], t[1], t[2]))
       f.write('\n')
+
 
 # def _build_vocab(input_file):
 #   word_cnt = collections.Counter()
