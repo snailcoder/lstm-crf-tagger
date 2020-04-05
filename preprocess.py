@@ -3,36 +3,36 @@
 # File              : preprocess.py
 # Author            : Yan <yanwong@126.com>
 # Date              : 31.03.2020
-# Last Modified Date: 03.04.2020
+# Last Modified Date: 05.04.2020
 # Last Modified By  : Yan <yanwong@126.com>
 
 import re
 import collections
 
-def process_PFR_sentence(s, punc_mode):
-  s = re.sub(
-      r'([\uff10-\uff19]+\uff0f[\uff10-\uff19]+)|([\uff10-\uff19]+(\uff0e[\uff10-\uff19]+)?\uff05?)',
-      r'N', s)  # replace fullwidth digits
-  s = re.sub(
-      r'[\uff21-\uff3a,\uff41-\uff5a]+',
-      r'L', s)  # replace fullwidth latins
+BASIC_LATIN_PROG = re.compile(r'[\u0021-\u007e]')
+
+# Legal chars include some of general punctuations, letterlike symbols,
+# CJK symbols and punctuation, CJK unified ideographs, halfwidth and
+# fullwidth forms.
+
+ILLEGAL_CHAR_PROG = re.compile(
+    r'[^\u2014\u2018\u2019\u201c\u201d\u2026\u2030\u2103\u3001\u3002\u3007-\u300f\u4e00-\u9fff\uff01-\uff5e]')
+
+def process_PFR_sentence(s):
   s = re.sub(r'\[|\][a-z]+', '', s)  # remove square brackets for proper nouns
 
   toks = s.split()
-  special = {'N': '<NUM>', 'L': '<LAT>', 'P': '<PUN>'}
   processed = []
-  punc_prog = re.compile(r'.+/w')
   for t in toks:
-    if punc_prog.match(t):  # keep or ignore
-      if punc_mode == 0:  # just leave it there
-        processed.append([t[:-2], 'S', 'w'])
-      elif punc_mode == 1:  # replace with 'P'
-        processed.append(['P', 'S', 'w'])  # as a single char word
-      continue
     parts = t.split('/')
     assert(len(parts) == 2)
+
     chs, pos = parts
-    assert(len(chs) > 0 and len(pos) > 0)
+    chs = BASIC_LATIN_PROG.sub(lambda x: chr(ord(x.group(0)) + 0xfee0), chs)
+    chs = ILLEGAL_CHAR_PROG.sub('', chs)  # remove illegal chars
+    if not chs:
+      continue
+
     if len(chs) == 1:  # single char word
       processed.append([chs, 'S', pos])
     else:
@@ -40,9 +40,6 @@ def process_PFR_sentence(s, punc_mode):
       for i in range(1, len(chs) - 1):
         processed.append([chs[i], 'M', pos])  # media
       processed.append([chs[-1], 'E', pos])  # end
-
-  for p in processed:
-    p[0] = special.get(p[0], p[0])  # replace with special tags
 
   return processed
 
@@ -79,28 +76,69 @@ def extract_PFR_sentences(input_file):
 
   return result
 
-def process_PFR_corpus(input_file, output_file, split_line=False, punc_mode=1):
-  # punc_mode
-  # 0: just leave punctuations there without any processing
-  # 1: replace the punctuations with a special mark
-  # other: ignore punctuations
+def process_PFR_corpus(input_file, output_tokens,
+                       output_chars=None, split_line=False):
+  """
+    output_chars
+    save splitted chars for training word vector
+  """
+
   sents = extract_PFR_sentences(input_file) if split_line else extract_PFR_lines(input_file)
 
-  processed = [process_PFR_sentence(s, punc_mode) for s in sents]
-  with open(output_file, 'w') as f:
+  processed = [process_PFR_sentence(s) for s in sents]
+  with open(output_tokens, 'w') as f:
     for s in processed:
-      for t in s:
-        f.write('%s\t%s\t%s\n' % (t[0], t[1], t[2]))
+      for c in s:
+        f.write('%s\t%s\t%s\n' % (c[0], c[1], c[2]))
       f.write('\n')
 
-def process_SIGHAN2005_corpus(input_file, output_file, ignore_punc=False):
+  if output_chars is not None:
+    with open(output_chars, 'w') as f:
+      for s in processed:
+        for c in s:
+          f.write(c[0] + ' ')
+        f.write('\n')
+
+def process_SIGHAN2005_corpus(input_file, output_tokens, output_chars=None):
+  """
+    output_chars
+    save splitted chars for training word vector
+  """
+
   processed = []
-  fullwidth_punc_prog = re.compile(r'[，、。！？：；（）《》]')
-  with open('input_file', 'r') as f:
-    for line in f:
-      toks = line.split()
+
+  with open(input_file, 'r') as f:
+    for s in f:
+      toks = s.split()
+      chs = []
       for t in toks:
-        pass
+        t = BASIC_LATIN_PROG.sub(lambda x: chr(ord(x.group(0)) + 0xfee0), t)
+        t = ILLEGAL_CHAR_PROG.sub('', t)  # remove illegal chars
+
+        if not t:
+          continue
+        if len(t) == 1:
+          chs.append([t, 'S'])
+        else:
+          chs.append([t[0], 'B'])
+          for i in range(1, len(t) - 1):
+            chs.append([t[i], 'M'])
+          chs.append([t[-1], 'E'])
+
+      processed.append(chs)
+
+  with open(output_tokens, 'w') as f:
+    for s in processed:
+      for c in s:
+        f.write('%s\t%s\n' % (c[0], c[1]))
+      f.write('\n')
+
+  if output_chars is not None:
+    with open(output_chars, 'w') as f:
+      for s in processed:
+        for c in s:
+          f.write(c[0] + ' ')
+        f.write('\n')
 
 # def _build_vocab(input_file):
 #   word_cnt = collections.Counter()
@@ -109,5 +147,6 @@ def process_SIGHAN2005_corpus(input_file, output_file, ignore_punc=False):
 #     for line in f:
 #       word_cnt.update(line.split())
 
-process_PFR_corpus('testdata.txt', 'processed.txt', punc_mode=1)
+# process_PFR_corpus('/home/wy/Documents/work/data/1998pfr.txt', 'processed_1998.txt', 'char_1998.txt')
+process_SIGHAN2005_corpus('/home/wy/Documents/work/data/people2014/news_chars.txt', 'processed_2014.txt', 'char_2014.txt')
 
