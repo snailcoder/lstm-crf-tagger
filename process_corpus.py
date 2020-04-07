@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# File              : preprocess.py
+# File              : process_corpus.py
 # Author            : Yan <yanwong@126.com>
 # Date              : 31.03.2020
-# Last Modified Date: 05.04.2020
+# Last Modified Date: 07.04.2020
 # Last Modified By  : Yan <yanwong@126.com>
 
 import re
-import collections
+import argparse
 
 BASIC_LATIN_PROG = re.compile(r'[\u0021-\u007e]')
 
-# Legal chars include some of general punctuations, letterlike symbols,
-# CJK symbols and punctuation, CJK unified ideographs, halfwidth and
-# fullwidth forms.
-
+"""Legal chars include some of general punctuations, letterlike symbols,
+CJK symbols and punctuation, CJK unified ideographs, halfwidth and
+fullwidth forms.
+"""
 ILLEGAL_CHAR_PROG = re.compile(
     r'[^\u2014\u2018\u2019\u201c\u201d\u2026\u2030\u2103\u3001\u3002\u3007-\u300f\u4e00-\u9fff\uff01-\uff5e]')
 
@@ -140,13 +140,28 @@ def process_SIGHAN2005_corpus(input_file, output_tokens, output_chars=None):
           f.write(c[0] + ' ')
         f.write('\n')
 
-# def _build_vocab(input_file):
-#   word_cnt = collections.Counter()
-# 
-#   with tf.io.gfile.GFile(input_file, mode='r') as f:
-#     for line in f:
-#       word_cnt.update(line.split())
+def main():
+  parser = argparse.ArgumentParser(
+      description='Process the corpus: PFR or SIGHAN2005 bake-off. '
+           'The original corpus should be encoded as UTF8.')
+  parser.add_argument('input', help='The corpus file.')
+  parser.add_argument('type', help='The corpus type: PFR or SIGHAN2005.')
+  parser.add_argument('output',
+                      help='The output file containing characters and tagss.')
+  parser.add_argument('-chars',
+                      help='Save the original corpus in a '
+                      'word2vec-training-ready format: characters are '
+                      'separated by a space.')
+  args = parser.parse_args()
 
-# process_PFR_corpus('/home/wy/Documents/work/data/1998pfr.txt', 'processed_1998.txt', 'char_1998.txt')
-process_SIGHAN2005_corpus('/home/wy/Documents/work/data/people2014/news_chars.txt', 'processed_2014.txt', 'char_2014.txt')
+  if args.type == 'PFR':
+    process_PFR_corpus(args.input, args.output, args.chars)
+  elif args.type == 'SIGHAN2005':
+    process_SIGHAN2005_corpus(args.input, args.output, args.chars)
+  else:
+    raise ValueError('The corput type should be one of these types: '
+                     'PFR, SIGHAN2005.')
+
+if __name__ == '__main__':
+  main()
 
