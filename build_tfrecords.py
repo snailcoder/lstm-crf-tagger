@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# File              : build_dataset.py
+# File              : build_tfrecords.py
 # Author            : Yan <yanwong@126.com>
 # Date              : 07.04.2020
 # Last Modified Date: 07.04.2020
@@ -16,7 +16,9 @@ import tensorflow as tf
 
 import special_words
 
-def _build_vocab(vocab_file):
+logging.basicConfig(level=logging.INFO)
+
+def _build_vocab(vocab_file, output_dir):
   """ Load the vocab file created by word2vec to build the vocab dict.
 
   Args:
@@ -37,8 +39,12 @@ def _build_vocab(vocab_file):
       assert(len(toks) == 2)
       vocab[toks[0]] = i
       i += 1
+    logging.info('Create vocab with %d words.', len(vocab))
 
-  logging.info('Create vocab with %d words.', len(vocab))
+  vocab_file = os.path.join(output_dir, 'vocab.txt')
+  with tf.io.gfile.GFile(vocab_file, mode='w') as f:
+    f.write('\n'.join(vocab.keys()))
+    logging.info('Wrote vocab file to %s', vocab_file)
 
   return vocab
 
@@ -55,7 +61,7 @@ def _sentence_to_ids(sent, vocab):
 def _create_serialized_example(sent, tags, vocab):
   """Helper for creating a serialized Example proto."""
   example = tf.train.Example(features=tf.train.Features(feature={
-    "sent": _int64_feature(_sentence_to_ids(sent, vocab)),
+    "sentence": _int64_feature(_sentence_to_ids(sent, vocab)),
     "tags": _int64_feature(tags)
     }))
   return example.SerializeToString()
@@ -147,7 +153,7 @@ def main():
   if not tf.io.gfile.isdir(args.output_dir):
     tf.io.gfile.makedirs(args.output_dir)
 
-  vocab = _build_vocab(args.vocab_file)
+  vocab = _build_vocab(args.vocab_file, args.output_dir)
   dataset = _build_dataset(args.input_file, vocab)
 
   logging.info('Shuffling dataset.')
