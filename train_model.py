@@ -60,8 +60,16 @@ optimizer = tf.keras.optimizers.SGD(lr=train_config.learning_rate,
 train_loss = tf.keras.metrics.Mean(name='train_loss')
 train_accuracy = tf.keras.metrics.Accuracy(name='train_accuracy')
 train_metric = metrics.TaggerMetric(model_config.n_tags)
-train_precision = tf.keras.metrics.Precision(name='train_precision')
-train_recall = tf.keras.metrics.Recall(name='train_recall')
+
+dev_accuracy = tf.keras.metrics.Accuracy(name='dev_accuracy')
+dev_metric = metrics.TaggerMetric(model_config.n_tags)
+
+def classification_report(metric):
+  metric_res = metric.result().numpy()
+  print('Class accuracy: ', metric_res[0])
+  print('Class precison: ', metric_res[1])
+  print('Class recall: ', metric_res[2])
+  print('Class F1 score: ', metric_res[3])
 
 def train_step(inp, tar):
   # inp.shape == (batch_size, max_seq_len)
@@ -79,8 +87,27 @@ def train_step(inp, tar):
   train_loss(loss)
   train_accuracy(tar, pred, padding_mask)
   train_metric(tar, pred, padding_mask)
-  # train_precision(tar, pred)
-  # train_recall(tar, pred)
+
+def eval_step(inp, tar):
+  # inp.shape == (batch_size, max_seq_len)
+  # tar.shape == (batch_size, max_seq_len)
+  padding_mask = data_utils.create_padding_mask(inp)
+  
+  pred, potentials = tagger(inp, True, padding_mask)  # (batch_size, max_seq_len)
+  loss = losses.loss_function(tar, potentials, padding_mask, 
+                              tagger.crf_layer.trans_params)
+
+  dev_accuracy(tar, pred, padding_mask)
+  dev_metric(tar, pred, padding_mask)
+
+def evaluate(dataset):
+  dev_accuracy.reset_states()
+  dev_metric.reset_states()
+
+  for batch, (inp, tar) in enumerate(dataset):
+    eval_step(inp, tar)
+
+  classification_report(dev_metric)
 
 for epoch in range(train_config.n_epochs):
   start = time.time()
@@ -88,8 +115,6 @@ for epoch in range(train_config.n_epochs):
   train_loss.reset_states()
   train_accuracy.reset_states()
   train_metric.reset_states()
-  # train_precision.reset_states()
-  # train_recall.reset_states()
 
   for batch, (inp, tar) in enumerate(train_dataset):
     train_step(inp, tar)
@@ -97,14 +122,15 @@ for epoch in range(train_config.n_epochs):
     if batch % 50 == 0:
       print('Epoch {} Batch {} Loss {:.4f} Accuracy {:.4f}'.format(
         epoch + 1, batch, train_loss.result(), train_accuracy.result()))
-      print('Tagger metric: ', train_metric.result())
+      classification_report(train_metric)
 
-  train_f1_score = 2 * train_precision.result() * train_recall.result() / (
-      train_precision.result() + train_recall.result()) 
+    if batch % train_config.freq_eval == 0:
+      evaluate(dev_dataset)
+      print('Eval accuracy {:.4f}'.format(dev_accuracy.result()))
+      classification_report(dev_metric)
 
   print('Epoch {} Loss {:.4f} Accuracy {:.4f} F1 {:.4f}'.format(
     epoch + 1, train_loss.result(), train_accuracy.result()))
-  print('Tagger metric: ', train_metric.result())
-
+  classification_report(train_metric)
 
 
