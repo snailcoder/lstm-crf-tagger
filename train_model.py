@@ -71,6 +71,7 @@ def classification_report(metric):
   print('Class recall: ', metric_res[2])
   print('Class F1 score: ', metric_res[3])
 
+@tf.function
 def train_step(inp, tar):
   # inp.shape == (batch_size, max_seq_len)
   # tar.shape == (batch_size, max_seq_len)
