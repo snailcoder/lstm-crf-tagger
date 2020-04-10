@@ -3,7 +3,7 @@
 # File              : train_model.py
 # Author            : Yan <yanwong@126.com>
 # Date              : 08.04.2020
-# Last Modified Date: 09.04.2020
+# Last Modified Date: 10.04.2020
 # Last Modified By  : Yan <yanwong@126.com>
 
 import argparse
@@ -15,6 +15,7 @@ import tensorflow as tf
 
 import model
 import losses
+import metrics
 import data_utils
 import configuration
 
@@ -39,8 +40,6 @@ parser.add_argument('save_dir',
 
 args = parser.parse_args()
 
-print(args)
-
 model_config = configuration.ModelConfig()
 train_config = configuration.TrainingConfig()
 
@@ -60,13 +59,14 @@ optimizer = tf.keras.optimizers.SGD(lr=train_config.learning_rate,
 
 train_loss = tf.keras.metrics.Mean(name='train_loss')
 train_accuracy = tf.keras.metrics.Accuracy(name='train_accuracy')
+train_metric = metrics.TaggerMetric(model_config.n_tags)
 train_precision = tf.keras.metrics.Precision(name='train_precision')
 train_recall = tf.keras.metrics.Recall(name='train_recall')
 
 def train_step(inp, tar):
   # inp.shape == (batch_size, max_seq_len)
-  # tags.shape == (batch_size, max_seq_len)
-  padding_mask = tf.cast(tf.math.logical_not(tf.math.equal(inp, 0)), tf.float32)
+  # tar.shape == (batch_size, max_seq_len)
+  padding_mask = data_utils.create_padding_mask(inp)
   
   with tf.GradientTape() as tape:
     pred, potentials = tagger(inp, True, padding_mask)  # (batch_size, max_seq_len)
@@ -77,7 +77,8 @@ def train_step(inp, tar):
   optimizer.apply_gradients(zip(gradients, tagger.trainable_variables))
 
   train_loss(loss)
-  train_accuracy(tar, pred)
+  train_accuracy(tar, pred, padding_mask)
+  train_metric(tar, pred, padding_mask)
   # train_precision(tar, pred)
   # train_recall(tar, pred)
 
@@ -86,8 +87,9 @@ for epoch in range(train_config.n_epochs):
 
   train_loss.reset_states()
   train_accuracy.reset_states()
-  train_precision.reset_states()
-  train_recall.reset_states()
+  train_metric.reset_states()
+  # train_precision.reset_states()
+  # train_recall.reset_states()
 
   for batch, (inp, tar) in enumerate(train_dataset):
     train_step(inp, tar)
@@ -95,12 +97,14 @@ for epoch in range(train_config.n_epochs):
     if batch % 50 == 0:
       print('Epoch {} Batch {} Loss {:.4f} Accuracy {:.4f}'.format(
         epoch + 1, batch, train_loss.result(), train_accuracy.result()))
+      print('Tagger metric: ', train_metric.result())
 
   train_f1_score = 2 * train_precision.result() * train_recall.result() / (
       train_precision.result() + train_recall.result()) 
 
   print('Epoch {} Loss {:.4f} Accuracy {:.4f} F1 {:.4f}'.format(
     epoch + 1, train_loss.result(), train_accuracy.result()))
+  print('Tagger metric: ', train_metric.result())
 
 
 

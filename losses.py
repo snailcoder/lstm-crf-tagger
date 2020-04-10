@@ -3,7 +3,7 @@
 # File              : losses.py
 # Author            : Yan <yanwong@126.com>
 # Date              : 08.04.2020
-# Last Modified Date: 09.04.2020
+# Last Modified Date: 10.04.2020
 # Last Modified By  : Yan <yanwong@126.com>
 
 import tensorflow as tf

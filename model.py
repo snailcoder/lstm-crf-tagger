@@ -3,7 +3,7 @@
 # File              : model.py
 # Author            : Yan <yanwong@126.com>
 # Date              : 30.03.2020
-# Last Modified Date: 09.04.2020
+# Last Modified Date: 10.04.2020
 # Last Modified By  : Yan <yanwong@126.com>
 
 import tensorflow as tf
@@ -53,11 +53,6 @@ class Model(tf.keras.Model):
         config.d_word_lstm, activation='tanh')
     self.final_layer = tf.keras.layers.Dense(config.n_tags)
     self.crf_layer = CRFLayer(config.n_tags)
-    # if embeddings is not None:
-    #   self.embeddings = PretrainedEmbedding(embeddings)
-    # else:
-    #   self.embeddings = tf.keras.layers.Embedding(
-    #       config.vocab_size, config.d_word)
     self.embedding_layer = tf.keras.layers.Embedding(
         vocab_size, config.d_word, trainable=False)
     self.embedding_dropout = tf.keras.layers.Dropout(rate=config.emb_dropout)

@@ -3,7 +3,7 @@
 # File              : data_utils.py
 # Author            : Yan <yanwong@126.com>
 # Date              : 31.03.2020
-# Last Modified Date: 09.04.2020
+# Last Modified Date: 10.04.2020
 # Last Modified By  : Yan <yanwong@126.com>
 
 import logging
@@ -123,4 +123,9 @@ def create_dataset(file_pattern, batch_size):
       padded_shapes=([-1], [-1]))
 
   return dataset
+
+def create_padding_mask(seq):
+  mask = tf.math.logical_not(tf.math.equal(seq, 0))
+  return tf.cast(mask, tf.float32)
+
 
