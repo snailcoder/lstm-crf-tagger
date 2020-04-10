@@ -93,8 +93,8 @@ def eval_step(inp, tar):
   # tar.shape == (batch_size, max_seq_len)
   padding_mask = data_utils.create_padding_mask(inp)
   
-  pred, potentials = tagger(inp, True, padding_mask)  # (batch_size, max_seq_len)
-  loss = losses.loss_function(tar, potentials, padding_mask, 
+  pred, potentials = tagger(inp, False, padding_mask)  # (batch_size, max_seq_len)
+  loss = losses.loss_function(tar, potentials, padding_mask,
                               tagger.crf_layer.trans_params)
 
   dev_accuracy(tar, pred, padding_mask)

@@ -67,7 +67,7 @@ class Model(tf.keras.Model):
 
     x = self.embedding_layer(x)  # (batch_size, max_seq_len, d_word)
     x = self.embedding_dropout(x, training=training)
-    x = self.rnn_layer(x, mask=padding_mask, training=training)
+    x = self.rnn_layer(x, mask=tf.cast(padding_mask, tf.bool), training=training)
     x = self.hidden_layer(x)
     logits = self.final_layer(x)
 
