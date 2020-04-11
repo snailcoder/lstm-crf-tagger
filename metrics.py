@@ -3,7 +3,7 @@
 # File              : metrics.py
 # Author            : Yan <yanwong@126.com>
 # Date              : 10.04.2020
-# Last Modified Date: 10.04.2020
+# Last Modified Date: 11.04.2020
 # Last Modified By  : Yan <yanwong@126.com>
 
 import tensorflow as tf
@@ -27,6 +27,8 @@ class TaggerMetric(tf.keras.metrics.Metric):
   def update_state(self, y_true, y_pred, sample_weight=None):
     # sample_weight.shape == (batch_size, max_seq_len)
 
+    # y_pred = tf.cast(y_pred, tf.int64)
+
     if sample_weight is None:
       sample_weight = tf.ones_like(y_true, dtype=tf.float32)
 
@@ -34,6 +36,7 @@ class TaggerMetric(tf.keras.metrics.Metric):
     self.total.assign_add(true_seq_len)
 
     for i in range(self.n_classes):
+      # i = tf.convert_to_tensor(i, dtype=tf.int64)
       binary_true_label = tf.cast(tf.math.equal(y_true, i), tf.float32)
       binary_pred_label = tf.cast(tf.math.equal(y_pred, i), tf.float32)
 

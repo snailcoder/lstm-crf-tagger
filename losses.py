@@ -3,7 +3,7 @@
 # File              : losses.py
 # Author            : Yan <yanwong@126.com>
 # Date              : 08.04.2020
-# Last Modified Date: 10.04.2020
+# Last Modified Date: 11.04.2020
 # Last Modified By  : Yan <yanwong@126.com>
 
 import tensorflow as tf
@@ -18,7 +18,7 @@ def loss_function(real, pred, mask, trans_params):
   real = tf.cast(real, tf.int32)
   log_likelihood, _ = tfa.text.crf_log_likelihood(
       pred, real, true_seq_len, trans_params)
-  loss = tf.math.reduce_sum(-log_likelihood)
+  loss = tf.math.reduce_mean(-log_likelihood)
 
   return loss
 

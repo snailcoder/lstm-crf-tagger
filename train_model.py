@@ -3,7 +3,7 @@
 # File              : train_model.py
 # Author            : Yan <yanwong@126.com>
 # Date              : 08.04.2020
-# Last Modified Date: 10.04.2020
+# Last Modified Date: 11.04.2020
 # Last Modified By  : Yan <yanwong@126.com>
 
 import argparse
@@ -71,12 +71,11 @@ def classification_report(metric):
   print('Class recall: ', metric_res[2])
   print('Class F1 score: ', metric_res[3])
 
-@tf.function
 def train_step(inp, tar):
   # inp.shape == (batch_size, max_seq_len)
   # tar.shape == (batch_size, max_seq_len)
   padding_mask = data_utils.create_padding_mask(inp)
-  
+
   with tf.GradientTape() as tape:
     pred, potentials = tagger(inp, True, padding_mask)  # (batch_size, max_seq_len)
     loss = losses.loss_function(tar, potentials, padding_mask, 
@@ -117,6 +116,9 @@ for epoch in range(train_config.n_epochs):
   train_accuracy.reset_states()
   train_metric.reset_states()
 
+  dev_accuracy.reset_states()
+  dev_metric.reset_states()
+
   for batch, (inp, tar) in enumerate(train_dataset):
     train_step(inp, tar)
 
@@ -130,7 +132,7 @@ for epoch in range(train_config.n_epochs):
       print('Eval accuracy {:.4f}'.format(dev_accuracy.result()))
       classification_report(dev_metric)
 
-  print('Epoch {} Loss {:.4f} Accuracy {:.4f} F1 {:.4f}'.format(
+  print('Epoch {} Loss {:.4f} Accuracy {:.4f}'.format(
     epoch + 1, train_loss.result(), train_accuracy.result()))
   classification_report(train_metric)
 
