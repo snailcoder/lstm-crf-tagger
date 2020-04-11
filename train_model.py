@@ -12,6 +12,7 @@ import logging
 import time
 
 import tensorflow as tf
+import numpy as np
 
 import model
 import losses
@@ -34,7 +35,7 @@ parser.add_argument('w2v',
                     help='The pre-trained word vector.')
 parser.add_argument('vocab',
                     help='The vocabulary file containing all words')
-parser.add_argument('save_dir',
+parser.add_argument('ckpt_dir',
                     help='Directory for saving and loading checkpoints.')
 
 
@@ -64,12 +65,20 @@ train_metric = metrics.TaggerMetric(model_config.n_tags)
 dev_accuracy = tf.keras.metrics.Accuracy(name='dev_accuracy')
 dev_metric = metrics.TaggerMetric(model_config.n_tags)
 
+ckpt = tf.train.Checkpoint(tagger=tagger, optimizer=optimizer)
+ckpt_manager = tf.train.CheckpointManager(ckpt, args.ckpt_dir, max_to_keep=50)
+
+if ckpt_manager.latest_checkpoint:
+  ckpt.restore(ckpt_manager.latest_checkpoint)
+  print('Latest checkpoint restored!')
+
 def classification_report(metric):
   metric_res = metric.result().numpy()
-  print('Class accuracy: ', metric_res[0])
-  print('Class precison: ', metric_res[1])
-  print('Class recall: ', metric_res[2])
-  print('Class F1 score: ', metric_res[3])
+  # print('Classification report:\n')
+  print('\taccuracy: ', metric_res[0])
+  print('\tprecison: ', metric_res[1])
+  print('\trecall: ', metric_res[2])
+  print('\tF1 score: ', metric_res[3])
 
 def train_step(inp, tar):
   # inp.shape == (batch_size, max_seq_len)
@@ -109,6 +118,8 @@ def evaluate(dataset):
 
   classification_report(dev_metric)
 
+best_dev = -np.inf
+
 for epoch in range(train_config.n_epochs):
   start = time.time()
 
@@ -129,11 +140,26 @@ for epoch in range(train_config.n_epochs):
 
     if batch % train_config.freq_eval == 0:
       evaluate(dev_dataset)
-      print('Eval accuracy {:.4f}'.format(dev_accuracy.result()))
+
+      macro_f1 = tf.math.reduce_mean(dev_metric.result()[3])
+      print('Eval accuracy {:.4f} Macro F1 {:.4f}'.format(
+        dev_accuracy.result(), macro_f1))
       classification_report(dev_metric)
+
+      if macro_f1 > best_dev:
+        best_dev = macro_f1
+        print('New best dev F1 {:.4f}'.format(best_dev))
+
+        ckpt_save_path = ckpt_manager.save()
+        print('Saving checkpoint for epoch {} at {}.'.format(
+          epoch + 1, ckpt_save_path))
+
+      print('Until now, best dev F1 {:.4f}'.format(best_dev))
 
   print('Epoch {} Loss {:.4f} Accuracy {:.4f}'.format(
     epoch + 1, train_loss.result(), train_accuracy.result()))
   classification_report(train_metric)
+
+print('Best dev F1 score {:.4f}'.format(best_dev))
 
 
