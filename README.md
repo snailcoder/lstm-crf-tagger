@@ -67,3 +67,8 @@ Here, you can use the Chinese character vectors: /corpus/people_vec.txt for crea
 ```bash
 ./word2vec -train /path/of/peoplesdaily.txt -output people_vec.txt -size 100 -window 5 -sample 1e-5 -negative 5 -hs 0 -binary 0 -cbow 0 -iter 5
 ```
+## Results
+| Method    | Macro F1|
+| :-:       |:-:      |
+|static     |81.34    |
+|non-static |87.37    |
