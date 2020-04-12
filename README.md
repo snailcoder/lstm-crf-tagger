@@ -16,7 +16,7 @@ If you have downloaded the SIGHAN2005 bake-off and want to train your model on o
 ```
 You can run process_corpus.py like this:
 ```bash
-python process_corpus /path/of/pku_training.utf8 SIGHAN2005 /path/of/pku_training_ready.txt
+python process_corpus.py /path/of/pku_training.utf8 SIGHAN2005 /path/of/pku_training_ready.txt
 ```
 Now you've converted the original file to the training-ready file in this format(S: single, B: beginning, M: middle, E: end):
 ```
