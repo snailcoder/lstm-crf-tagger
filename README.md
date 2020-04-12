@@ -73,4 +73,4 @@ heavily on one representation class, dropout is used."
 | Method    | Macro F1|
 | :-:       |:-:      |
 |static     |81.34    |
-|non-static |87.86    |
+|non-static |88.10    |
