@@ -1,6 +1,5 @@
 # lstm-crf-tagger
-This is an implementation of LSTM-CRF tagger proposed in the paper [Neural Architectures for Named Entity Recognition]
-(https://www.aclweb.org/anthology/N16-1030/).
+This is an implementation of LSTM-CRF tagger proposed in the paper [Neural Architectures for Named Entity Recognition](https://www.aclweb.org/anthology/N16-1030/).
 The model is trained and tested on SIGHAN2005 bake-off for word segmentation. 
 
 ## Setup
