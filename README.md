@@ -58,9 +58,13 @@ Now you've converted the original file to the training-ready file in this format
 ```bash
 python build_tfrecords.py /path/of/pku_training_ready.txt /path/of/dataset
 ```
-This script converts your training-ready file to TFRecord format, shards and write them to /path/of/dataset directory.
+This script converts your training-ready file to TFRecord format, shards them and write them to the directory: /path/of/dataset. In the meanwhile, it generates the vocabulary file: vocab.txt based on the training corpus.
 
 2. Train the model.
 ```bash
-python 
+python train_model.py '/path/of/dataset/train-?????-of-?????' '/path/of/dataset/valid-?????-of-?????' ./corpus/people_vec.txt /path/of/dataset/vocab.txt /path/to/save/checkpoints
+```
+Here, you can use the Chinese character vectors: /corpus/people_vec.txt for creating the embedding layer. These vectors are obtained by applying word2vec on the People's Daily dataset(199801-199806, 2014):
+```bash
+./word2vec -train /path/of/peoplesdaily.txt -output people_vec.txt -size 100 -window 5 -sample 1e-5 -negative 5 -hs 0 -binary 0 -cbow 0 -iter 5
 ```
