@@ -68,7 +68,7 @@ Here, you can use the Chinese character vectors: /corpus/people_vec.txt for crea
 ./word2vec -train /path/of/peoplesdaily.txt -output people_vec.txt -size 100 -window 5 -sample 1e-5 -negative 5 -hs 0 -binary 0 -cbow 0 -iter 5
 ```
 ## Experiments
-According to the setup reported in [Neural Architectures for Named Entity Recognition](https://www.aclweb.org/anthology/N16-1030/), 
+According to the training setup reported in [Neural Architectures for Named Entity Recognition](https://www.aclweb.org/anthology/N16-1030/).
 | Method    | Macro F1|
 | :-:       |:-:      |
 |static     |81.34    |
