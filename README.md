@@ -8,7 +8,7 @@ Python3, Numpy, Tensorflow 2.0
 ## Preparation
 You can directly use the prepared corpus: ./data/pku_training.txt for training your own tagger. Here, pku_training.txt is created by running process_corpus.py on pku_training.utf8 provided by SIGHAN2005 bake-off.
 
-If you have downloaded the SIGHAN2005 bake-off and want to train your model on other corpus(e.g. msr_training.utf8, cityu_training.utf8) contained by the bake-off, you need to run process_corpus.py to get the training-read file. The corpus provided by SIGHAN2005 is in an original format:
+If you have downloaded the SIGHAN2005 bake-off and want to train your model on other corpus(e.g. msr_training.utf8, cityu_training.utf8) included in the bake-off, you need to run process_corpus.py to get the training-read file. The corpus provided by SIGHAN2005 is in an original format:
 ```
 中共中央  总书记  、  国家  主席  江  泽民  
 （  一九九七年  十二月  三十一日  ）
