@@ -3,7 +3,7 @@
 # File              : model.py
 # Author            : Yan <yanwong@126.com>
 # Date              : 30.03.2020
-# Last Modified Date: 10.04.2020
+# Last Modified Date: 13.04.2020
 # Last Modified By  : Yan <yanwong@126.com>
 
 import tensorflow as tf
@@ -54,7 +54,7 @@ class Model(tf.keras.Model):
     self.final_layer = tf.keras.layers.Dense(config.n_tags)
     self.crf_layer = CRFLayer(config.n_tags)
     self.embedding_layer = tf.keras.layers.Embedding(
-        vocab_size, config.d_word, trainable=False)
+        vocab_size, config.d_word, trainable=config.non_static_emb)
     self.embedding_dropout = tf.keras.layers.Dropout(rate=config.emb_dropout)
 
     if embeddings is not None:
