@@ -77,6 +77,6 @@ The pre-trained embedding could be fine-tuned or not during training. However, f
 | Method    | Macro F1|
 | :-:       |:-:      |
 |static     |81.34    |
-|non-static |93.04    |
+|non-static |93.25    |
 
 Furthermore, using static embedding throughout training leads overfitting around epoch 12, while overfitting is not ovserved around epoch 100 for non-static embedding.
