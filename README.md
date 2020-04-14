@@ -68,7 +68,7 @@ Here, you can use the Chinese character vectors: /corpus/people_vec.txt for crea
 ./word2vec -train /path/of/peoplesdaily.txt -output people_vec.txt -size 100 -window 5 -sample 1e-5 -negative 5 -hs 0 -binary 0 -cbow 0 -iter 5
 ```
 ## Experiments
-I use **almost** the same hyperparameters (see configuration.py) with the training setup reported in [Neural Architectures for Named Entity Recognition](https://www.aclweb.org/anthology/N16-1030/), except I train the model only 30 epochs. In addition, I use L2-regularization with a lambda of 0.0001 to prevent the model from overfitting.
+I use **almost** the same hyperparameters (see configuration.py) with the training setup reported in [Neural Architectures for Named Entity Recognition](https://www.aclweb.org/anthology/N16-1030/), and I train the model 100 epochs. In addition, I use L2-regularization with a lambda of 0.0001 to prevent the model from overfitting.
 
 Notice the paper said "To prevent the learner from depending too heavily on one representation class, dropout is used." However, there's only one source representations in my implementation, so the dropout over the input embedding layer is not used by default(emb_dropout = 0). In fact, the macro F1 score could only reach around 0.79 if I set emb_dropout to be 0.5. 
 

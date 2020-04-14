@@ -3,7 +3,7 @@
 # File              : configuration.py
 # Author            : Yan <yanwong@126.com>
 # Date              : 08.04.2020
-# Last Modified Date: 13.04.2020
+# Last Modified Date: 14.04.2020
 # Last Modified By  : Yan <yanwong@126.com>
 
 """Default configuration for model architecture and training."""
@@ -24,7 +24,7 @@ class TrainingConfig(object):
   def __init__(self):
     self.learning_rate = 0.01
     self.clip_gradients = 5.0
-    self.n_epochs = 50  # number of epochs over the training set
+    self.n_epochs = 100  # number of epochs over the training set
     self.freq_eval = 100  # evaluate on dev every freq_eval steps
     self.batch_size = 64
 
