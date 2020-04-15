@@ -3,7 +3,7 @@
 # File              : model.py
 # Author            : Yan <yanwong@126.com>
 # Date              : 30.03.2020
-# Last Modified Date: 13.04.2020
+# Last Modified Date: 16.04.2020
 # Last Modified By  : Yan <yanwong@126.com>
 
 import tensorflow as tf
@@ -61,6 +61,10 @@ class Model(tf.keras.Model):
       self.embedding_layer.build((None, vocab_size))
       self.embedding_layer.set_weights([embeddings])
 
+  # When deploying, tf need to know the input signature.
+  # @tf.function(input_signature=[tf.TensorSpec([None, None], tf.int64),
+  #                               tf.TensorSpec([], tf.bool),
+  #                               tf.TensorSpec([None, None], tf.float32)])
   def call(self, x, training, padding_mask):
     # x.shape == (batch_size, max_seq_len)
     # padding_mask.shape == (batch_size, max_seq_len)

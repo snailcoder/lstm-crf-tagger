@@ -3,13 +3,14 @@
 # File              : train_model.py
 # Author            : Yan <yanwong@126.com>
 # Date              : 08.04.2020
-# Last Modified Date: 13.04.2020
+# Last Modified Date: 16.04.2020
 # Last Modified By  : Yan <yanwong@126.com>
 
 import argparse
 import collections
 import logging
 import time
+import os
 
 import tensorflow as tf
 import numpy as np
@@ -37,6 +38,10 @@ parser.add_argument('vocab',
                     help='The vocabulary file containing all words')
 parser.add_argument('ckpt_dir',
                     help='Directory for saving and loading checkpoints.')
+# parser.add_argument('model_dir', default='lstm_crf_tagger',
+#                     help='Directory for saving and loading model.')
+# parser.add_argument('model_version', default='0001',
+#                     help='Version of saved model.')
 
 
 args = parser.parse_args()
@@ -67,6 +72,9 @@ dev_metric = metrics.TaggerMetric(model_config.n_tags)
 
 ckpt = tf.train.Checkpoint(tagger=tagger, optimizer=optimizer)
 ckpt_manager = tf.train.CheckpointManager(ckpt, args.ckpt_dir, max_to_keep=50)
+
+# If you want to deploy model, put SavedModel here.
+# model_path = os.path.join(args.model_dir, args.model_version)
 
 if ckpt_manager.latest_checkpoint:
   ckpt.restore(ckpt_manager.latest_checkpoint)
@@ -153,6 +161,11 @@ for epoch in range(train_config.n_epochs):
         ckpt_save_path = ckpt_manager.save()
         print('Saving checkpoint for epoch {} at {}.'.format(
           epoch + 1, ckpt_save_path))
+
+        # Save model for deploying.
+        # Remember to use tagger.call() instead of tagger() in above inferences.
+        # tf.saved_model(tagger, model_path, signatures={'call': tagger.call})
+        # print('Saved model for epoch {} at {}.').format(epoch + 1, model_path)
 
       print('Until now, best dev F1 {:.4f}'.format(best_dev))
 
