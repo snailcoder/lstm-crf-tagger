@@ -3,13 +3,14 @@
 # File              : build_tfrecords.py
 # Author            : Yan <yanwong@126.com>
 # Date              : 07.04.2020
-# Last Modified Date: 09.04.2020
+# Last Modified Date: 26.04.2020
 # Last Modified By  : Yan <yanwong@126.com>
 
 import os
 import collections
 import argparse
 import logging
+import json
 
 import numpy as np
 import tensorflow as tf
@@ -73,13 +74,14 @@ def _create_serialized_example(sent, tags, vocab):
     }))
   return example.SerializeToString()
 
-def _build_dataset(filename, vocab):
-  """ Build dataset from the file in 'SBME' format(check data/pfr4seg.txt).
+def _build_dataset(filename, vocab, tag_dict):
+  """ Build dataset from the file in Co-NLL NER task 2002 format
+      (check corpus/pku_training.txt).
 
   Args:
-    filename: The file contains sentences of which each character has been
-              tagged with 'B', 'M', 'E' or 'S'.
+    filename: The file contains sentences of which each character has been tagged.
     vocab: A dict mapping each character to Id.
+    tag_dict: A dict mapping each tag to Id.
 
   Returns:
     A list containing serialized examples.
@@ -90,7 +92,7 @@ def _build_dataset(filename, vocab):
   with tf.io.gfile.GFile(filename, 'r') as f:
     sent = []
     tags = []
-    tag_vocab = {'S': 0, 'B': 1, 'M': 2, 'E': 3}
+    # tag_dict = {'S': 0, 'B': 1, 'M': 2, 'E': 3}
 
     for line in f:
       line = line.strip()
@@ -102,9 +104,9 @@ def _build_dataset(filename, vocab):
           tags = []
       else:
         toks = line.split()
-        assert(len(toks) >= 2 and toks[1] in 'SBME')
+        assert(len(toks) >= 2 and toks[1] in tag_dict)
         sent.append(toks[0])
-        tags.append(tag_vocab[toks[1]])
+        tags.append(tag_dict[toks[1]])
 
   return serialized
 
@@ -140,6 +142,14 @@ def main():
       'input_file',
       help='Each character and if tag appear on their own line.')
   parser.add_argument('output_dir', help='The output directory.')
+  parser.add_argument('tag_dict',
+                      help='Json-format tag dict file. For example,'
+                          ' for word segmentation task, the dict'
+                          ' contains "S", "B", "M", "E"; for NER task,'
+                          ' the dict contains "O", "B-PER", "I-PER",'
+                          ' "B-ORG", "I-ORG", "B-LOC", "I-LOC".'
+                          ' Check corpus/seg_tags.json and'
+                          ' corpus/ner_tags.json.')
   parser.add_argument(
       '-validation_percentage', type=float, default=0.1,
       help='Percentage of the training data used for validation.')
@@ -153,8 +163,11 @@ def main():
   if not tf.io.gfile.isdir(args.output_dir):
     tf.io.gfile.makedirs(args.output_dir)
 
+  with open(args.tag_dict, 'r') as f:
+    tag_dict = json.load(f)
+
   vocab = _build_vocab(args.input_file, args.output_dir)
-  dataset = _build_dataset(args.input_file, vocab)
+  dataset = _build_dataset(args.input_file, vocab, tag_dict)
 
   logging.info('Shuffling dataset.')
   np.random.seed(123)
