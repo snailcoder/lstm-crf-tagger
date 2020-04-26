@@ -6,7 +6,7 @@ The model is trained and tested on SIGHAN2005 bake-off for word segmentation.
 Python3, Numpy, Tensorflow 2.0
 
 ## Preparation
-You can directly use the prepared corpus: ./data/pku_training.txt for training your own tagger. Here, pku_training.txt is created by running process_corpus.py on pku_training.utf8 provided by SIGHAN2005 bake-off.
+You can directly use the prepared corpus: ./corpus/pku_training.txt for training your own tagger. Here, pku_training.txt is created by running process_corpus.py on pku_training.utf8 provided by SIGHAN2005 bake-off.
 
 If you have downloaded the SIGHAN2005 bake-off and want to train your model on other corpus(e.g. msr_training.utf8, cityu_training.utf8) included in the bake-off, you need to run process_corpus.py to get the training-read file. The corpus provided by SIGHAN2005 is in an original format:
 ```
@@ -51,11 +51,13 @@ Now you've converted the original file to the training-ready file in this format
 ）      S
 
 ...
+
+For Chinese NER task, I've provided processed SIGHAN 2006 bake-off MSRA dataset.
 ```
 ## Training
-1. Create TFRecord dataset.
+1. Create TFRecord dataset for Chinese word segmentation.
 ```bash
-python build_tfrecords.py /path/of/pku_training_ready.txt /path/of/dataset
+python build_tfrecords.py /path/of/pku_training_ready.txt /path/of/dataset /path/of/tag_dict
 ```
 This script converts your training-ready file to TFRecord format, shards them and write them to the directory: /path/of/dataset. In the meanwhile, it generates the vocabulary file: vocab.txt based on the training corpus.
 
