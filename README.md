@@ -52,8 +52,9 @@ Now you've converted the original file to the training-ready file in this format
 
 ...
 
-For Chinese NER task, I've provided processed SIGHAN 2006 bake-off MSRA dataset.
 ```
+For Chinese NER task, I've provided processed SIGHAN 2006 bake-off MSRA dataset.
+
 ## Training
 1. Create TFRecord dataset for Chinese word segmentation.
 ```bash
