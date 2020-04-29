@@ -3,7 +3,7 @@
 # File              : train_model.py
 # Author            : Yan <yanwong@126.com>
 # Date              : 08.04.2020
-# Last Modified Date: 16.04.2020
+# Last Modified Date: 27.04.2020
 # Last Modified By  : Yan <yanwong@126.com>
 
 import argparse
@@ -23,8 +23,7 @@ import configuration
 
 logging.basicConfig(level=logging.INFO)
 
-parser = argparse.ArgumentParser(
-    description='Train the LSTM-CRF tagger for word segmentation.')
+parser = argparse.ArgumentParser(description='Train the LSTM-CRF tagger.')
 
 parser.add_argument('train_pattern',
                     help='File pattern of sharded TFRecord files containing '
